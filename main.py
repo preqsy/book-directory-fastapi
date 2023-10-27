@@ -2,8 +2,6 @@ from fastapi import FastAPI, status, HTTPException
 from dotenv import find_dotenv, load_dotenv
 from model import Book
 import os
-import random
-from database import database
 from pymongo import MongoClient
 
 load_dotenv(find_dotenv())
@@ -14,13 +12,7 @@ cluster = MongoClient(MONGO_URI)
 
 db = cluster["books"]
 col = db["books"]
-def find(isbn):
-    """returns the index of a dict"""
-    for i, j in enumerate(database):
-        if j["isbn"] == isbn:
-            return i
         
-
 app = FastAPI()
 
 
@@ -54,11 +46,11 @@ def single_post(isbn: str):
 @app.post("/books", status_code=status.HTTP_201_CREATED)
 def create_book(book:Book):
     book_dict = book.dict()
-    id = random.randrange(0, 1000000000)
-    book_dict["_id"] =  id
-    col.insert_one(book_dict)
-
-    return f"""Book with title "{book_dict['title']}" has been created"""
+    book_dict["_id"] =  book_dict["isbn"]
+    if col.find_one({"_id" : book_dict["_id"]}) == None:
+        col.insert_one(book_dict)
+        return f"""Book with title "{book_dict['title']}" has been created"""
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Book with isbn: {book_dict['_id']} already exists")
 
 
 @app.delete("/books/{isbn}", status_code=status.HTTP_204_NO_CONTENT)

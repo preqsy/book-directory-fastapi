@@ -2,9 +2,8 @@ from pydantic import BaseModel
 from typing import Optional
 
 class Book(BaseModel):
-    _id : str
     title: str
-    isbn: str
+    isbn: int
     pageCount: int
     publishedDate: dict
     shortDescription: str
